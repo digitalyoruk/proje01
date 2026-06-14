@@ -7,13 +7,15 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   display: "swap",
+  adjustFontFallback: true,
 });
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600"],
+  adjustFontFallback: true,
 });
 
 const SITE_URL = "https://proje01.com";
@@ -80,6 +82,9 @@ export default function RootLayout({
       lang="tr"
       className={`${inter.variable} ${interTight.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="https://cdn.sanity.io" />
+      </head>
       <body className="min-h-full flex flex-col bg-[var(--color-bg)] text-[var(--color-ink)]">
         {children}
       </body>

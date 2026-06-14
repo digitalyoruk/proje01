@@ -1,6 +1,3 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
 import { CmsImage } from "@/components/site/cms-image";
 import type { LandingData, Social } from "@cms/lib/types";
 
@@ -11,16 +8,9 @@ export function Hero({
   data: LandingData["hero"];
   socials: Social[];
 }) {
-  const reduce = useReducedMotion();
-
   return (
     <section className="relative min-h-[100dvh] w-full overflow-hidden">
-      <motion.div
-        className="absolute inset-0"
-        initial={reduce ? false : { scale: 1.08 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <div className="hero-image-zoom absolute inset-0">
         <CmsImage
           image={data.image}
           alt={data.image?.alt || data.title}
@@ -29,7 +19,7 @@ export function Hero({
           sizes="100vw"
           className="object-cover"
         />
-      </motion.div>
+      </div>
 
       {/* Scrims for legibility */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/20" />
@@ -37,21 +27,11 @@ export function Hero({
 
       <div className="container-edge relative flex min-h-[100dvh] flex-col justify-end pb-16 pt-28 md:pb-20">
         <div className="grid gap-10 md:grid-cols-12 md:items-end">
-          <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-3xl font-display text-4xl font-medium leading-[1.05] tracking-tight text-white md:col-span-8 md:text-6xl lg:text-7xl"
-          >
+          <h1 className="max-w-3xl font-display text-4xl font-medium leading-[1.05] tracking-tight text-white md:col-span-8 md:text-6xl lg:text-7xl">
             {data.title}
-          </motion.h1>
+          </h1>
 
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col gap-6 md:col-span-4 md:items-end"
-          >
+          <div className="flex flex-col gap-6 md:col-span-4 md:items-end">
             <p className="max-w-sm text-sm leading-relaxed text-white/85 md:text-right">
               {data.intro}
             </p>
@@ -71,7 +51,7 @@ export function Hero({
                 ))}
               </ul>
             )}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

@@ -1,14 +1,30 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const TO = process.env.CONTACT_TO_EMAIL ?? "info@proje01.com";
 const FROM =
   process.env.CONTACT_FROM_EMAIL ?? "Proje 01 <forms@proje01.com>";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function clean(value: unknown, max = 500) {
   return String(value ?? "")
     .trim()
     .slice(0, max);
+}
+
+/** First address = To, remaining = Cc. Comma-separated in CONTACT_TO_EMAIL. */
+function parseRecipients(raw: string | undefined) {
+  const emails = (raw ?? "info@proje01.com")
+    .split(",")
+    .map((e) => e.trim())
+    .filter((e) => EMAIL_RE.test(e));
+
+  if (emails.length === 0) {
+    return { to: "info@proje01.com" as const, cc: undefined };
+  }
+
+  const [to, ...cc] = emails;
+  return { to, cc: cc.length > 0 ? cc : undefined };
 }
 
 export async function POST(req: Request) {
@@ -43,17 +59,20 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!EMAIL_RE.test(email)) {
     return NextResponse.json(
       { error: "Geçerli bir e-posta adresi girin." },
       { status: 400 }
     );
   }
 
+  const { to, cc } = parseRecipients(process.env.CONTACT_TO_EMAIL);
+
   const resend = new Resend(apiKey);
-  const { error } = await resend.emails.send({
+  const { error: notifyError } = await resend.emails.send({
     from: FROM,
-    to: TO,
+    to,
+    ...(cc ? { cc } : {}),
     replyTo: email,
     subject: `İletişim formu: ${name}`,
     text: [
@@ -68,12 +87,32 @@ export async function POST(req: Request) {
       .join("\n"),
   });
 
-  if (error) {
-    console.error("[contact] Resend error:", error);
+  if (notifyError) {
+    console.error("[contact] Resend notify error:", notifyError);
     return NextResponse.json(
       { error: "Mesaj gönderilemedi. Lütfen tekrar deneyin." },
       { status: 502 }
     );
+  }
+
+  const { error: autoReplyError } = await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: "Mesajınızı aldık - Proje 01",
+    text: [
+      `Merhaba ${name},`,
+      "",
+      "Mesajınızı aldık. En kısa sürede size dönüş yapacağız.",
+      "",
+      "Gönderdiğiniz mesaj:",
+      message,
+      "",
+      "Proje 01",
+    ].join("\n"),
+  });
+
+  if (autoReplyError) {
+    console.error("[contact] Resend auto-reply error:", autoReplyError);
   }
 
   return NextResponse.json({ ok: true });
